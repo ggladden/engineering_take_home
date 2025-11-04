@@ -21,7 +21,9 @@ class CustomField < ApplicationRecord
     return if name.blank?
 
     parameterized_name = name.parameterize.underscore
-    if Building.column_names.include?(parameterized_name)
+    reserved_names = Building.column_names + [ "client_name" ]
+
+    if reserved_names.include?(parameterized_name)
       errors.add(:name, "conflicts with building attribute '#{parameterized_name}'")
     end
   end

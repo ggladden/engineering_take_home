@@ -8,14 +8,6 @@ class Building < ApplicationRecord
   validates :address, :state, :zip, presence: true
   validate :custom_fields_belong_to_client
 
-  def as_json_with_custom_fields
-    base_attributes = as_json(only: [ :id, :address, :state, :zip, :client_id ])
-
-    custom_field_values.each_with_object(base_attributes) do |cfv, hash|
-      hash[cfv.custom_field.name.parameterize.underscore] = cfv.value
-    end
-  end
-
   private
 
   def custom_fields_belong_to_client

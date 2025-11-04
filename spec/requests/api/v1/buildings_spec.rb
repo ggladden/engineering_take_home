@@ -233,4 +233,76 @@ RSpec.describe "Api::V1::Buildings", type: :request do
       end
     end
   end
+
+  describe "GET /api/v1/buildings" do
+    let(:client1) { create(:client, name: "Client One") }
+    let(:client2) { create(:client, name: "Client Two") }
+
+    let!(:field1_client1) { create(:custom_field, :number, client: client1, name: "Bedrooms") }
+    let!(:field2_client1) { create(:custom_field, :freeform, client: client1, name: "Color") }
+
+    let!(:building1) do
+      building = create(:building, client: client1, address: "123 Main St", state: "NY", zip: "10001")
+      create(:custom_field_value, building: building, custom_field: field1_client1, value: "3")
+      building
+    end
+
+    let!(:building2) do
+      building = create(:building, client: client1, address: "456 Oak Ave", state: "CA", zip: "90210")
+      create(:custom_field_value, building: building, custom_field: field1_client1, value: "2")
+      create(:custom_field_value, building: building, custom_field: field2_client1, value: "Blue")
+      building
+    end
+
+    let!(:building3) { create(:building, client: client2, address: "789 Elm Rd", state: "TX", zip: "75001") }
+
+    it "returns all buildings with pagination" do
+      get "/api/v1/buildings", params: { page: 1, per_page: 2 }, as: :json
+
+      expect(response).to have_http_status(:ok)
+
+      json = JSON.parse(response.body)
+      expect(json["status"]).to eq("success")
+      expect(json["buildings"].length).to eq(2)
+      expect(json["pagination"]["current_page"]).to eq(1)
+      expect(json["pagination"]["total_pages"]).to eq(2)
+      expect(json["pagination"]["total_count"]).to eq(3)
+    end
+
+    it "returns second page of results" do
+      get "/api/v1/buildings", params: { page: 2, per_page: 2 }, as: :json
+
+      expect(response).to have_http_status(:ok)
+
+      json = JSON.parse(response.body)
+      expect(json["buildings"].length).to eq(1)
+      expect(json["pagination"]["current_page"]).to eq(2)
+    end
+
+    it "includes client_name and all custom fields for each building" do
+      get "/api/v1/buildings", as: :json
+
+      expect(response).to have_http_status(:ok)
+
+      json = JSON.parse(response.body)
+      building1_json = json["buildings"].find { |b| b["id"] == building1.id }
+
+      expect(building1_json["client_name"]).to eq("Client One")
+      expect(building1_json["address"]).to eq("123 Main St")
+      expect(building1_json["bedrooms"]).to eq("3")
+      expect(building1_json["color"]).to eq("")
+    end
+
+    it "returns empty array when no buildings exist" do
+      Building.destroy_all
+
+      get "/api/v1/buildings", as: :json
+
+      expect(response).to have_http_status(:ok)
+
+      json = JSON.parse(response.body)
+      expect(json["buildings"]).to eq([])
+      expect(json["pagination"]["total_count"]).to eq(0)
+    end
+  end
 end

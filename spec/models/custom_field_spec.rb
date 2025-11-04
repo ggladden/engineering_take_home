@@ -62,6 +62,13 @@ RSpec.describe CustomField, type: :model do
         expect(field.errors[:name]).to include("conflicts with building attribute 'client_id'")
       end
 
+      it 'is invalid when name is client_name' do
+        field = build(:custom_field, :number, name: 'Client Name', client: client)
+
+        expect(field).not_to be_valid
+        expect(field.errors[:name]).to include("conflicts with building attribute 'client_name'")
+      end
+
       it 'is valid when name does not conflict' do
         field = build(:custom_field, :number, name: 'Bathrooms', client: client)
 

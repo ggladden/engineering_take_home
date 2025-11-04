@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :custom_field do
     association :client
-    name { Faker::Lorem.word }
+    sequence(:name) { |n| "Custom Field #{n}" }
 
     trait :number do
       field_type { :number }
