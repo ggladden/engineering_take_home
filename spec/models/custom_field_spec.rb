@@ -44,5 +44,29 @@ RSpec.describe CustomField, type: :model do
         expect(field_for_other_client).to be_valid
       end
     end
+
+    describe 'name conflict with building attributes' do
+      let(:client) { create(:client) }
+
+      it 'is invalid when name conflicts with building column' do
+        field = build(:custom_field, :number, name: 'Address', client: client)
+
+        expect(field).not_to be_valid
+        expect(field.errors[:name]).to include("conflicts with building attribute 'address'")
+      end
+
+      it 'is invalid when parameterized name conflicts' do
+        field = build(:custom_field, :number, name: 'Client ID', client: client)
+
+        expect(field).not_to be_valid
+        expect(field.errors[:name]).to include("conflicts with building attribute 'client_id'")
+      end
+
+      it 'is valid when name does not conflict' do
+        field = build(:custom_field, :number, name: 'Bathrooms', client: client)
+
+        expect(field).to be_valid
+      end
+    end
   end
 end

@@ -7,12 +7,22 @@ class CustomField < ApplicationRecord
   validates :name, presence: true, uniqueness: { scope: :client_id }
   validates :field_type, presence: true
   validate :enum_options_required_for_enum_type
+  validate :name_does_not_conflict_with_building_attributes
 
   private
 
   def enum_options_required_for_enum_type
     if enum_type? && (enum_options.nil? || enum_options.empty?)
       errors.add(:enum_options, "must be present for enum type fields")
+    end
+  end
+
+  def name_does_not_conflict_with_building_attributes
+    return if name.blank?
+
+    parameterized_name = name.parameterize.underscore
+    if Building.column_names.include?(parameterized_name)
+      errors.add(:name, "conflicts with building attribute '#{parameterized_name}'")
     end
   end
 end
