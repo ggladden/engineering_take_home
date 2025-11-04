@@ -3,7 +3,7 @@ class Building < ApplicationRecord
   has_many :custom_field_values, dependent: :destroy
   has_many :custom_fields, through: :custom_field_values
 
-  accepts_nested_attributes_for :custom_field_values
+  accepts_nested_attributes_for :custom_field_values, allow_destroy: true
 
   validates :address, :state, :zip, presence: true
   validate :custom_fields_belong_to_client
